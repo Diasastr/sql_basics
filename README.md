@@ -54,18 +54,18 @@ psql -U postgres
 ```
 
 2. **Створення бази даних:**
-```shell
+```sql
 CREATE DATABASE companydb;
 ```
 
 
 3. **Перехід до бази даних:**
-```shell
+```sql
 \c companydb
 ```
 
 4. **Створення таблиць:**
-```psql
+```sql
 CREATE TABLE Employees (
 EmployeeID int PRIMARY KEY,
 FirstName varchar(50),
@@ -95,7 +95,7 @@ FOREIGN KEY (AssignedToID) REFERENCES Employees(EmployeeID)
 ```
 
 ### Додавання даних до таблиць
-```psql
+```sql
 INSERT INTO Employees (EmployeeID, FirstName, LastName, Position, Email) VALUES
 (1, 'John', 'Doe', 'Manager', 'john.doe@example.com'),
 (2, 'Jane', 'Doe', 'Developer', 'jane.doe@example.com'),
@@ -105,11 +105,59 @@ INSERT INTO Employees (EmployeeID, FirstName, LastName, Position, Email) VALUES
 ```
 etc...
 
+
+## SQL-запити
+
+### Запит для виведення всіх проектів з працівниками, які ними керують
+
+Цей запит об'єднує таблиці `Projects` та `Employees` для відображення назв проектів та імен менеджерів, які ними керують.
+
+```sql
+SELECT 
+    p.ProjectName, 
+    e.FirstName || ' ' || e.LastName AS ManagerName
+FROM 
+    Projects p
+JOIN 
+    Employees e ON p.ProjectManagerID = e.EmployeeID;
+```
+### Запит для виведення всіх завдань конкретного проекту разом з працівниками, яким призначено ці завдання
+
+Цей запит використовується для отримання переліку завдань конкретного проекту з іменами працівників, які відповідають за ці завдання. Наприклад, для проекту 'Project Alpha'.
+
+```sql
+SELECT 
+    t.TaskName, 
+    e.FirstName || ' ' || e.LastName AS AssignedEmployee
+FROM 
+    Tasks t
+JOIN 
+    Employees e ON t.AssignedToID = e.EmployeeID
+WHERE 
+    t.ProjectID = (SELECT ProjectID FROM Projects WHERE ProjectName = 'Project Alpha');
+```
+
+
+### Обчислення та виведення середнього та максимального терміну виконання завдань усіх проєктів
+
+Цей запит використовується для обчислення середнього та максимального терміну виконання всіх завдань в базі даних, виходячи з дат початку проектів і кінцевих термінів завдань.
+
+```sql
+SELECT 
+    AVG(t.DueDate - p.StartDate) AS AverageDuration, 
+    MAX(t.DueDate - p.StartDate) AS MaximumDuration
+FROM 
+    Tasks t
+JOIN 
+    Projects p ON t.ProjectID = p.ProjectID;
+```
+
+
 ### Створення та тестування backup-файлу
 
 #### Створення backup:
 ```shell
-pg_dump -U postgres CompanyDB > companydb_backup.sql
+pg_dump -U postgres companydb > companydb_backup.sql
 ```
 
 #### Тестування backup:
